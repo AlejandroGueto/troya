@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ÉPICA: La Guerra de Troya y la Odisea</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-deep-sea: #050a15;
+            --gold-primary: #d4af37;
+            --gold-light: #f3e5ab;
+            --blood-red: #8a0303;
+            --marble-white: #f0ede6;
+            --glass-bg: rgba(15, 20, 30, 0.75);
+            --glass-border: rgba(212, 175, 55, 0.3);
+            --glass-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+            --success: #2e8b57;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-deep-sea);
+            color: var(--marble-white);
+            font-family: 'Lora', serif;
+            overflow-x: hidden;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            line-height: 1.6;
+        }
+
+        h1, h2, h3, h4, .cinzel {
+            font-family: 'Cinzel', serif;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        /* Background Canvas */
+        #bg-canvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            z-index: -1;
+            background: radial-gradient(circle at bottom, #111a2c 0%, var(--bg-deep-sea) 100%);
+        }
+
+        /* Greek Meander Border Top */
+        .meander-border {
+            height: 15px;
+            width: 100%;
+            background-image: url('data:image/svg+xml;utf8,<svg width="40" height="20" xmlns="http://www.w3.org/2000/svg"><path d="M0,0 h40 v20 h-40 z" fill="%23050a15"/><path d="M0,18 h38 v-16 h-34 v12 h30 v-8 h-26 v4 h22 v-2 h-20 v-2 h24 v6 h-28 v-10 h32 v14 h-38 z" fill="%23d4af37"/></svg>');
+            background-repeat: repeat-x;
+            position: fixed;
+            top: 0; z-index: 101;
+        }
+
+        /* Header */
+        header {
+            position: fixed;
+            top: 15px; width: 100%;
+            background: rgba(5, 10, 21, 0.9);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--glass-border);
+            z-index: 100;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            color: var(--gold-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-bar {
+            display: flex;
+            gap: 25px;
+            font-family: 'Cinzel', serif;
+            font-weight: 700;
+            color: var(--gold-light);
+            font-size: 1.1rem;
+        }
+
+        main {
+            margin-top: 90px;
+            padding: 20px;
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .screen {
+            display: none;
+            width: 100%;
+            max-width: 1100px;
+            animation: fadeUp 0.8s ease forwards;
+            opacity: 0;
+            transform: translateY(20px);
+            margin-bottom: 50px;
+        }
+        .screen.active {
+            display: block;
+        }
+
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 5px;
+            box-shadow: var(--glass-shadow);
+            padding: 3rem;
+            position: relative;
+        }
+
+        .glass-panel::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            border: 2px solid transparent;
+            background: linear-gradient(45deg, var(--gold-primary), transparent, var(--gold-primary)) border-box;
+            -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: destination-out;
+            mask-composite: exclude;
+            pointer-events: none;
+            border-radius: 5px;
+            opacity: 0.3;
+        }
+
+        /* Typography */
+        h1 { font-size: 3rem; color: var(--gold-primary); text-align: center; margin-bottom: 0.5rem; text-shadow: 0 2px 10px rgba(212,175,55,0.3); }
+        h2 { font-size: 2.2rem; color: var(--gold-light); border-bottom: 1px solid var(--glass-border); padding-bottom: 10px; margin-bottom: 20px; margin-top: 30px;}
+        h3 { font-size: 1.5rem; color: var(--gold-primary); margin: 25px 0 15px 0; }
+        
+        .theory-text {
+            font-size: 1.15rem;
+            line-height: 1.8;
+            color: #d1d5db;
+            text-align: justify;
+            margin-bottom: 1.5rem;
+        }
+        
+        .theory-text p { margin-bottom: 1.2rem; }
+        
+        .greek-term {
+            color: var(--gold-primary);
+            font-style: italic;
+            font-weight: 600;
+        }
+
+        .highlight {
+            color: #fff;
+            font-weight: 600;
+            background: rgba(212,175,55,0.15);
+            padding: 0 4px;
+            border-radius: 3px;
+        }
+
+        .btn-epic {
+            background: transparent;
+            color: var(--gold-primary);
+            border: 2px solid var(--gold-primary);
+            padding: 15px 40px;
+            font-family: 'Cinzel', serif;
+            font-size: 1.2rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            margin-top: 20px;
+        }
+
+        .btn-epic:hover {
+            background: var(--gold-primary);
+            color: var(--bg-deep-sea);
+            box-shadow: 0 0 20px rgba(212,175,55,0.4);
+        }
+
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            margin: 30px 0;
+            border: 2px solid var(--gold-primary);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+        }
+        .video-container iframe {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+        }
+
+        .game-section {
+            background: rgba(0,0,0,0.4);
+            border: 1px solid var(--glass-border);
+            padding: 25px;
+            margin-top: 30px;
+            border-radius: 8px;
+        }
+
+        /* Drag and Drop (Phase 2) */
+        .drag-container {
+            display: flex;
+            gap: 20px;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        .faction-drop {
+            flex: 1;
+            min-height: 250px;
+            border: 2px dashed var(--gold-primary);
+            padding: 15px;
+            background: rgba(212,175,55,0.05);
+            text-align: center;
+        }
+        .faction-drop.troy { border-color: var(--blood-red); background: rgba(138,3,3,0.05); }
+        
+        .hero-drag {
+            background: var(--bg-deep-sea);
+            border: 1px solid var(--gold-primary);
+            color: var(--marble-white);
+            padding: 10px 15px;
+            margin: 8px;
+            cursor: grab;
+            display: inline-block;
+            font-family: 'Cinzel', serif;
+            font-weight: 700;
+            transition: transform 0.2s;
+        }
+        .hero-drag:active { cursor: grabbing; transform: scale(1.05); }
+        
+        .heroes-pool {
+            min-height: 100px;
+            border: 1px solid #444;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        /* Order Game (Phase 1) */
+        .order-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .order-item {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid #555;
+            padding: 15px;
+            cursor: pointer;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+        }
+        .order-item:hover { border-color: var(--gold-primary); background: rgba(212,175,55,0.1); }
+        .order-item.selected { border-color: var(--gold-primary); background: var(--gold-primary); color: var(--bg-deep-sea); }
+        .order-item.correct { border-color: var(--success); background: rgba(46,139,87,0.2); pointer-events: none; }
+        .order-number {
+            width: 30px; height: 30px;
+            border-radius: 50%;
+            background: var(--bg-deep-sea);
+            color: var(--gold-light);
+            display: flex; justify-content: center; align-items: center;
+            margin-right: 15px;
+            font-weight: bold;
+        }
+
+        /* Quiz (Phase 3) */
+        .quiz-opt {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--glass-border);
+            padding: 15px 20px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: 0.3s;
+            font-family: 'Lora', serif;
+            font-size: 1.1rem;
+            width: 100%;
+            text-align: left;
+            color: white;
+        }
+        .quiz-opt:hover { background: rgba(212,175,55,0.15); transform: translateX(10px); }
+        .quiz-opt.correct { background: var(--success); border-color: var(--success); color: white; }
+        .quiz-opt.wrong { background: var(--blood-red); border-color: var(--blood-red); color: white; }
+
+        /* Odyssey Game (Phase 4) */
+        .trial-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .trial-card {
+            background: rgba(0,0,0,0.6);
+            border: 1px solid #555;
+            padding: 20px;
+            text-align: center;
+        }
+        .trial-card h4 { color: var(--gold-light); margin-bottom: 10px; }
+        .solution-select {
+            width: 100%;
+            padding: 10px;
+            margin-top: 15px;
+            background: var(--bg-deep-sea);
+            color: white;
+            border: 1px solid var(--gold-primary);
+            font-family: 'Lora', serif;
+        }
+
+        /* Feedback UI */
+        #feedback-toast {
+            position: fixed;
+            bottom: -100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--gold-primary);
+            color: var(--bg-deep-sea);
+            padding: 15px 30px;
+            font-family: 'Cinzel', serif;
+            font-weight: bold;
+            border-radius: 5px;
+            transition: 0.3s;
+            z-index: 1000;
+        }
+
+        @keyframes fadeUp {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .hidden { display: none !important; }
+        .text-center { text-align: center; }
+    </style>
+</head>
+<body>
+
+    <div class="meander-border"></div>
+    <canvas id="bg-canvas"></canvas>
+
+    <header>
+        <div class="logo cinzel">
+            <i class="fa-solid fa-masks-theater"></i> ÉPICA
+        </div>
+        <div class="status-bar">
+            <div><i class="fa-solid fa-hourglass-half"></i> <span id="timer">00:00</span></div>
+            <div><i class="fa-solid fa-bolt"></i> KLEOS (GLORIA): <span id="score">0</span></div>
+        </div>
+    </header>
+
+    <main>
+        <section id="screen-intro" class="screen active">
+            <div class="glass-panel text-center">
+                <i class="fa-solid fa-landmark-dome" style="font-size: 4rem; color: var(--gold-primary); margin-bottom: 20px;"></i>
+                <h1>Canta, oh Diosa...</h1>
+                <h3 style="color: var(--marble-white);">Módulo Didáctico de Griego I - La Epopeya Homérica</h3>
+                
+                <div class="theory-text" style="text-align: center; margin-top: 30px;">
+                    <p>Bienvenido, mortal, a los albores de la civilización occidental. La literatura europea no comienza con titubeos, sino con dos obras maestras monumentales, atribuidas al legendario aedo ciego <strong>Homero</strong> (s. VIII a.C.): La Ilíada y La Odisea.</p>
+                    <p>En este módulo oficial superarás cuatro pruebas diseñadas por los dioses. Leerás los mitos fundacionales, aprenderás terminología griega esencial y desentrañarás el <span class="greek-term">Mythos</span> (relato tradicional) frente al <span class="greek-term">Logos</span> (la razón).</p>
+                    
+                    <div style="background: rgba(138,3,3,0.2); border-left: 4px solid var(--blood-red); padding: 15px; margin: 30px 0; text-align: left;">
+                        <i class="fa-solid fa-triangle-exclamation" style="color: var(--blood-red);"></i> <strong>Aviso del Oráculo:</strong> La paciencia es una virtud heroica (<span class="greek-term">Areté</span>). Debes leer detalladamente la teoría de cada fase antes de enfrentarte a los retos. Tu <span class="greek-term">Kleos</span> (Gloria) final dependerá de ello. Tiempo estimado: 1.5 horas.
+                    </div>
+                </div>
+
+                <button class="btn-epic" onclick="startGame()">Comenzar la Epopeya</button>
+            </div>
+        </section>
+
+        <section id="screen-fase1" class="screen">
+            <div class="glass-panel">
+                <h2>Fase I: Los Orígenes y la Manzana de la Discordia</h2>
+                
+                <div class="theory-text">
+                    <p>La Guerra de Troya no comenzó con un ejército, sino con una boda. El rey Peleo y la ninfa marina Tetis (futuros padres de Aquiles) celebraron sus nupcias, invitando a todos los dioses... excepto a <strong>Eris</strong>, la diosa de la discordia. Enfurecida por el desprecio, Eris se presentó en el banquete y arrojó una manzana de oro con una inscripción en griego: <span class="greek-term">ΤΗΙ ΚΑΛΛΙΣΤΗΙ (tēi kallistēi)</span>, que significa "Para la más bella".</p>
+                    <p>Inmediatamente, tres diosas reclamaron la manzana: <strong>Hera</strong> (esposa de Zeus), <strong>Atenea</strong> (diosa de la sabiduría y la guerra estratégica) y <strong>Afrodita</strong> (diosa del amor y la belleza). Zeus, sabiamente negándose a elegir, ordenó que el juicio lo realizara un mortal: <strong>Paris</strong> (también llamado Alejandro), un príncipe troyano que vivía como pastor en el monte Ida debido a una profecía que decía que destruiría su ciudad.</p>
+                    <p>Comenzó el famoso <strong>Juicio de Paris</strong>. Las diosas intentaron sobornarlo: Hera le ofreció poder político y tierras; Atenea le ofreció sabiduría y victoria en la guerra; pero Afrodita le ofreció el amor de la mujer más hermosa del mundo mortal: <strong>Helena de Esparta</strong>.</p>
+                    <p>Paris eligió a Afrodita, ganándose el odio eterno de Hera y Atenea hacia los troyanos. El problema era que Helena ya estaba casada con Menelao, rey de Esparta. Cuando Paris viajó a Esparta y "raptó" a Helena (la mitología debate si ella fue por voluntad propia o bajo el hechizo de Afrodita), se rompió la sagrada ley de la hospitalidad (<span class="greek-term">Xenía</span>).</p>
+                    <p>Años antes, todos los pretendientes de Helena habían jurado proteger al elegido (el <em>Juramento de Tindáreo</em>). Así, Agamenón, rey de Micenas y hermano de Menelao, invocó el juramento y reunió a la mayor flota jamás vista (mil naves aqueas) para navegar hacia Troya, iniciando un asedio de diez años.</p>
+                </div>
+
+                <div class="video-container">
+                    <!-- Placeholder de vídeo educativo YouTube sobre el Mito -->
+                    <iframe src="https://www.youtube.com/embed/-GTNCZXmiyc?si=l53jCEwMo30boyu3" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                </div>
+
+                <div class="game-section">
+                    <h3>Reto de las Moiras: El Hilo del Destino</h3>
+                    <p class="theory-text" style="font-size: 1rem;">La historia es una cadena inalterable de causas y efectos. Haz clic en los siguientes eventos en el <strong>orden cronológico exacto</strong> en el que ocurrieron según el mito que acabas de leer. (Valor: 200 Kleos).</p>
+                    
+                    <div class="order-list" id="order-game-list">
+                        <!-- Generado por JS -->
+                    </div>
+                </div>
+                
+                <div class="text-center mt-2">
+                    <button class="btn-epic hidden" id="btn-next-2" onclick="nextScreen('screen-fase2')">Navegar hacia Troya</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="screen-fase2" class="screen">
+            <div class="glass-panel">
+                <h2>Fase II: La Ilíada y la Cólera de Aquiles</h2>
+                
+                <div class="theory-text">
+                    <p>Contrario a la creencia popular, La Ilíada no narra los diez años de la Guerra de Troya, ni siquiera menciona el Caballo de Madera. Narra apenas 51 días en el décimo año de asedio. Su tema central se revela en su primera palabra en griego: <span class="greek-term">Μῆνιν (Mênin)</span>, que significa cólera, ira divina o funesta.</p>
+                    <p>El poema canta "La cólera de Aquiles, hijo de Peleo". Esta cólera se desata cuando Agamenón (líder de los Aqueos/Griegos) es forzado a devolver a su esclava Criseida (hija de un sacerdote de Apolo) para detener una plaga. En compensación, Agamenón roba a Briseida, el botín de guerra de Aquiles. Aquiles, sintiendo que su honor ha sido ultrajado, se retira del combate junto con sus mirmidones.</p>
+                    <p>Sin Aquiles, los troyanos, liderados por su gran héroe <strong>Héctor</strong> (hijo del rey Príamo), comienzan a masacrar a los griegos y están a punto de quemar sus naves. Ante la desesperación, <strong>Patroclo</strong>, el compañero más amado de Aquiles, le pide prestada su armadura para asustar a los troyanos. Patroclo tiene éxito al principio, pero desobedece a Aquiles avanzando demasiado y es asesinado por Héctor (con ayuda del dios Apolo).</p>
+                    <p>La muerte de Patroclo provoca la segunda y más terrible cólera de Aquiles. Ciego de furia, regresa al combate y masacra a los troyanos sin piedad hasta enfrentarse en duelo singular con Héctor. Aquiles mata a Héctor, ata su cadáver a su carro y lo arrastra humillantemente alrededor de las murallas de Troya, cometiendo <span class="greek-term">Hybris</span> (desmesura, orgullo excesivo contra las leyes divinas).</p>
+                    <p>La Ilíada concluye con un momento de profunda humanidad: el rey Príamo se infiltra en el campamento griego por la noche y besa las manos del asesino de su hijo, suplicando por el cadáver. Aquiles se compadece, ambos lloran juntos y Aquiles devuelve el cuerpo. La épica termina con los funerales de Héctor, domador de caballos.</p>
+                </div>
+
+                <div class="game-section">
+                    <h3>Reto Estratégico: Las Facciones</h3>
+                    <p class="theory-text" style="font-size: 1rem;">Arrastra cada personaje o dios al bando al que apoyaron en la Guerra de Troya según los textos. (Valor: 20 Kleos por acierto).</p>
+                    
+                    <div class="heroes-pool" id="heroes-pool" ondrop="drop(event)" ondragover="allowDrop(event)">
+                        <!-- Generado por JS -->
+                    </div>
+
+                    <div class="drag-container">
+                        <div class="faction-drop" id="aqueos-drop" data-faction="aqueos" ondrop="drop(event)" ondragover="allowDrop(event)">
+                            <h4 class="cinzel" style="color: var(--gold-light);">Campamento Aqueo (Griegos)</h4>
+                        </div>
+                        <div class="faction-drop troy" id="troyanos-drop" data-faction="troyanos" ondrop="drop(event)" ondragover="allowDrop(event)">
+                            <h4 class="cinzel" style="color: var(--blood-red);">Murallas de Troya</h4>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center mt-2">
+                    <button class="btn-epic hidden" id="btn-next-3" onclick="nextScreen('screen-fase3')">Presenciar la Caída</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="screen-fase3" class="screen">
+            <div class="glass-panel">
+                <h2>Fase III: El Ardid y las Cenizas de Ilión</h2>
+                
+                <div class="theory-text">
+                    <p>Tras la muerte de Aquiles (alcanzado en el talón por una flecha de Paris guiada por Apolo), la guerra quedó estancada. La fuerza bruta había fracasado. Era el momento de la inteligencia astuta, concepto griego conocido como <span class="greek-term">Metis</span>, personificado por <strong>Odiseo (Ulises)</strong>, rey de Ítaca.</p>
+                    <p>Odiseo ideó la construcción de un gigantesco caballo de madera, aparentemente una ofrenda a la diosa Atenea para tener un viaje de regreso seguro. Los griegos quemaron su campamento y fingieron zarpar, ocultándose tras la cercana isla de Ténedos, mientras los mejores guerreros se escondían en el vientre del caballo.</p>
+                    <p>Los troyanos, creyendo haber ganado la guerra tras diez años, salieron y encontraron el caballo. Hubo voces de advertencia. El sacerdote <strong>Laocoonte</strong> arrojó una lanza contra el caballo gritando que no se fiaran de los griegos ni siquiera cuando traían regalos. Casandra, la profetisa a la que Apolo maldijo para que siempre dijera la verdad y nadie la creyera, también advirtió de la trampa. Sin embargo, los dioses enviaron serpientes marinas que devoraron a Laocoonte y sus hijos, convenciendo a los troyanos de que el caballo era sagrado.</p>
+                    <p>Metieron el caballo en la ciudad y celebraron una gran fiesta. Por la noche, cuando Troya dormía ebria, Sinón (un espía griego) abrió el caballo. Los griegos salieron, mataron a los centinelas y abrieron las puertas al resto del ejército que había regresado al amparo de la oscuridad.</p>
+                    <p>El saqueo fue brutal e impío. Neoptólemo (hijo de Aquiles) asesinó al anciano rey Príamo en el altar de Zeus. Troya fue arrasada hasta los cimientos. Solo unos pocos troyanos lograron escapar, entre ellos el héroe <strong>Eneas</strong>, quien llevaba a su padre Anquises a hombros, y que (según los romanos en la Eneida) fundaría la estirpe de Roma.</p>
+                </div>
+
+                <div class="game-section">
+                    <h3>Quiz del Destino</h3>
+                    <p class="theory-text" style="font-size: 1rem;">Responde a los interrogantes de las Moiras basándote en la historia que has leído. (Valor: 50 Kleos por acierto).</p>
+                    
+                    <div id="quiz-container">
+                        <h4 id="quiz-question" style="color: var(--gold-primary); margin-bottom: 20px; font-size:1.3rem;">Pregunta...</h4>
+                        <div id="quiz-options">
+                            <!-- Generado por JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center mt-2">
+                    <button class="btn-epic hidden" id="btn-next-4" onclick="nextScreen('screen-fase4')">Comenzar el Regreso (Nóstos)</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="screen-fase4" class="screen">
+            <div class="glass-panel">
+                <h2>Fase IV: La Odisea y el Nóstos</h2>
+                
+                <div class="theory-text">
+                    <p>Si la Ilíada es el poema de la guerra, la Odisea es el poema del <span class="greek-term">Nóstos</span> (el viaje de regreso a la patria). Tras saquear Troya, los dioses enfurecieron con los griegos por sus sacrilegios, asegurando que casi ninguno tuviera un regreso fácil. El peor destino lo sufrió <strong>Odiseo</strong>, quien tardaría diez años más en regresar a su isla, Ítaca.</p>
+                    <p>En la Odisea, el enemigo no son ejércitos, sino la naturaleza, los monstruos y los dioses (especialmente Poseidón, quien lo odia). En su ausencia, el palacio de Odiseo en Ítaca ha sido invadido por decenas de nobles (los pretendientes) que devoran su hacienda y presionan a su esposa, <strong>Penélope</strong>, para que se case con uno de ellos dándole por muerto. Ella utiliza la astucia tejiendo un sudario por el día y destejiéndolo por la noche para ganar tiempo, mientras su hijo Telémaco sale a buscar a su padre.</p>
+                    <p>En su viaje, Odiseo enfrenta múltiples peligros:
+                    <ul>
+                        <li><strong>Los Lotófagos:</strong> Quienes comen la flor del loto olvidan su patria y el deseo de regresar.</li>
+                        <li><strong>Polifemo (El Cíclope):</strong> Hijo de Poseidón que devora a los hombres. Odiseo lo emborracha, le dice que su nombre es <em>Nadie</em> (<span class="greek-term">Oûtis</span>) y le clava una estaca en el único ojo. Cuando Polifemo pide ayuda gritando "¡Nadie me está matando!", los otros cíclopes lo ignoran. Escapan ocultos bajo el vientre de las ovejas.</li>
+                        <li><strong>Circe:</strong> Hechicera que convierte a los marineros en cerdos.</li>
+                        <li><strong>Las Sirenas:</strong> Monstruos mitad ave, mitad mujer, cuyo canto atrae a los barcos hacia los arrecifes. Odiseo ordena a sus hombres taparse los oídos con cera, pero él pide que lo aten al mástil para escuchar el conocimiento oculto de su canto sin morir.</li>
+                        <li><strong>Escila y Caribdis:</strong> Monstruos en un estrecho. Escila tiene seis cabezas y devora marineros; Caribdis es un remolino que se traga barcos enteros. Odiseo debe elegir pasar cerca de Escila y sacrificar a seis hombres antes que perder todo el barco en Caribdis.</li>
+                    </ul></p>
+                    <p>Finalmente, Odiseo llega solo a Ítaca (tras perder a toda su tripulación). Disfrazado de mendigo por Atenea, participa en un concurso de tiro con arco propuesto por Penélope que solo él puede ganar. Tras lograrlo, con ayuda de su hijo Telémaco, masacra a todos los pretendientes y recupera su reino.</p>
+                </div>
+
+                <div class="video-container">
+                    <iframe src="https://www.youtube.com/embed/Jkj7tYoS_eA?si=vPJfKlo1LNodwWoG" title="La Odisea" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                </div>
+
+                <div class="game-section">
+                    <h3>El Juicio de Atenea: Soluciones del Ingenio</h3>
+                    <p class="theory-text" style="font-size: 1rem;">La <span class="greek-term">Metis</span> (astucia) es el arma de Odiseo. Asocia cada peligro con la solución que utilizó para superarlo. (Valor: 60 Kleos por acierto).</p>
+                    
+                    <div class="trial-grid" id="trial-grid">
+                        <!-- Generado por JS -->
+                    </div>
+                </div>
+
+                <div class="text-center mt-2">
+                    <button class="btn-epic hidden" id="btn-next-5" onclick="checkOdysseyAndFinish()">Reclamar Diploma Divino</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="screen-end" class="screen">
+            <div class="glass-panel" style="border-color: var(--gold-primary); text-align: center;">
+                <i class="fa-solid fa-crown" style="font-size: 6rem; color: var(--gold-primary); margin-bottom: 20px;"></i>
+                <h1 style="color: var(--gold-light);">El Parnaso te Aguarda</h1>
+                <h2 id="final-rank" style="color: var(--marble-white); margin-top: 10px;">Epíteto: ...</h2>
+                
+                <div class="theory-text" style="text-align: center; margin-top: 30px;">
+                    <p>Has recorrido los caminos de bronce de la Ilíada y los mares oscuros de la Odisea. Has comprendido los cimientos de la mitología y la literatura griega, demostrando que posees el conocimiento necesario para superar el currículo de Griego I.</p>
+                </div>
+
+                <div style="font-family: 'Cinzel', serif; font-size: 1.5rem; margin: 30px 0; border: 1px solid var(--gold-primary); padding: 20px; background: rgba(212,175,55,0.1);">
+                    <p>Kleos (Gloria) Acumulada: <span id="final-score" style="color: var(--gold-primary); font-weight: bold;">0</span></p>
+                    <p style="font-size: 1.2rem; margin-top: 10px;">Tiempo de Epopeya: <span id="final-time">00:00</span></p>
+                </div>
+
+                <p style="font-size: 0.9rem; color: #888; font-family: 'Lora', serif;">
+                    * Módulo alineado con los Criterios de Evaluación BOJA (Griego I) - Bloque de Literatura (Épica) y Legado Mitológico.
+                </p>
+            </div>
+        </section>
+    </main>
+
+    <div id="feedback-toast">Respuesta Correcta</div>
+
+    <script>
+        // --- State Management ---
+        let state = {
+            kleos: 0,
+            timeElapsed: 0,
+            timerInterval: null
+        };
+
+        function updateScore(points) {
+            state.kleos += points;
+            const el = document.getElementById('score');
+            el.innerText = state.kleos;
+            el.style.color = points > 0 ? 'var(--success)' : 'var(--blood-red)';
+            el.style.transform = 'scale(1.5)';
+            setTimeout(() => {
+                el.style.color = 'var(--gold-light)';
+                el.style.transform = 'scale(1)';
+            }, 300);
+        }
+
+        function formatTime(sec) {
+            const m = Math.floor(sec / 60).toString().padStart(2, '0');
+            const s = (sec % 60).toString().padStart(2, '0');
+            return `${m}:${s}`;
+        }
+
+        function showToast(msg, isSuccess = true) {
+            const toast = document.getElementById('feedback-toast');
+            toast.innerText = msg;
+            toast.style.backgroundColor = isSuccess ? 'var(--success)' : 'var(--blood-red)';
+            toast.style.color = 'white';
+            toast.style.bottom = '20px';
+            setTimeout(() => toast.style.bottom = '-100px', 2000);
+        }
+
+        function nextScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            if(screenId === 'screen-end') {
+                clearInterval(state.timerInterval);
+                document.getElementById('final-score').innerText = state.kleos;
+                document.getElementById('final-time').innerText = formatTime(state.timeElapsed);
+                
+                // Determinar Rango (Max approx 1100 Kleos)
+                let rank = "Habitante del Hades";
+                if(state.kleos > 400) rank = "Aqueo de Bronce";
+                if(state.kleos > 700) rank = "Héroe Domador de Caballos";
+                if(state.kleos > 900) rank = "Hijo de los Dioses (Semidiós)";
+                if(state.kleos >= 1080) rank = "Igual a Zeus en Inteligencia";
+                
+                document.getElementById('final-rank').innerText = `Epíteto: ${rank}`;
+            }
+        }
+
+        function startGame() {
+            state.timerInterval = setInterval(() => {
+                state.timeElapsed++;
+                document.getElementById('timer').innerText = formatTime(state.timeElapsed);
+            }, 1000);
+            initOrderGame();
+            initDragGame();
+            initQuizGame();
+            initOdysseyGame();
+            nextScreen('screen-fase1');
+        }
+
+        // --- Phase 1: Chronological Order ---
+        const timelineEvents = [
+            { id: 1, text: "Bodas de Peleo y Tetis (Eris no es invitada)." },
+            { id: 2, text: "Eris lanza la Manzana de la Discordia." },
+            { id: 3, text: "El Juicio de Paris (Elige a Afrodita)." },
+            { id: 4, text: "Paris viaja a Esparta y rapta a Helena." },
+            { id: 5, text: "Agamenón invoca el Juramento de Tindáreo." }
+        ];
+        
+        let currentOrderIndex = 1;
+
+        function initOrderGame() {
+            const list = document.getElementById('order-game-list');
+            let shuffled = [...timelineEvents].sort(() => Math.random() - 0.5);
+            
+            shuffled.forEach(ev => {
+                let div = document.createElement('div');
+                div.className = 'order-item';
+                div.innerHTML = `<div class="order-number">?</div> <div>${ev.text}</div>`;
+                div.onclick = () => tryOrder(div, ev.id);
+                list.appendChild(div);
+            });
+        }
+
+        function tryOrder(element, id) {
+            if(id === currentOrderIndex) {
+                element.classList.add('correct');
+                element.querySelector('.order-number').innerText = currentOrderIndex;
+                currentOrderIndex++;
+                updateScore(40); // 5 items * 40 = 200 Kleos
+                showToast("¡Correcto! El hilo del destino se teje.");
+                
+                if(currentOrderIndex > timelineEvents.length) {
+                    document.getElementById('btn-next-2').classList.remove('hidden');
+                }
+            } else {
+                element.style.borderColor = 'var(--blood-red)';
+                setTimeout(() => element.style.borderColor = '#555', 500);
+                updateScore(-10);
+                showToast("Cronología equivocada, mortal.", false);
+            }
+        }
+
+        // --- Phase 2: Drag and Drop Factions ---
+        const heroes = [
+            { id: 'h1', name: 'Aquiles', faction: 'aqueos' },
+            { id: 'h2', name: 'Héctor', faction: 'troyanos' },
+            { id: 'h3', name: 'Agamenón', faction: 'aqueos' },
+            { id: 'h4', name: 'Príamo', faction: 'troyanos' },
+            { id: 'h5', name: 'Patroclo', faction: 'aqueos' },
+            { id: 'h6', name: 'Paris (Alejandro)', faction: 'troyanos' },
+            { id: 'h7', name: 'Diosa Atenea', faction: 'aqueos' },
+            { id: 'h8', name: 'Diosa Afrodita', faction: 'troyanos' },
+            { id: 'h9', name: 'Odiseo (Ulises)', faction: 'aqueos' },
+            { id: 'h10', name: 'Dios Apolo', faction: 'troyanos' }
+        ];
+
+        let draggedHero = null;
+        let heroesPlaced = 0;
+
+        function initDragGame() {
+            const pool = document.getElementById('heroes-pool');
+            let shuffled = [...heroes].sort(() => Math.random() - 0.5);
+            shuffled.forEach(h => {
+                let div = document.createElement('div');
+                div.className = 'hero-drag';
+                div.draggable = true;
+                div.innerText = h.name;
+                div.id = h.id;
+                div.dataset.faction = h.faction;
+                div.ondragstart = (e) => {
+                    draggedHero = div;
+                    e.dataTransfer.setData('text/plain', h.id);
+                };
+                pool.appendChild(div);
+            });
+        }
+
+        function allowDrop(ev) { ev.preventDefault(); }
+
+        function drop(ev) {
+            ev.preventDefault();
+            const target = ev.target.closest('.faction-drop');
+            if(!target || !draggedHero) return;
+
+            if(draggedHero.dataset.faction === target.dataset.faction) {
+                target.appendChild(draggedHero);
+                draggedHero.draggable = false;
+                draggedHero.style.border = '1px solid var(--success)';
+                draggedHero.style.cursor = 'default';
+                updateScore(20); // 10 * 20 = 200 Kleos
+                heroesPlaced++;
+                draggedHero = null;
+                
+                if(heroesPlaced === heroes.length) {
+                    document.getElementById('btn-next-3').classList.remove('hidden');
+                }
+            } else {
+                updateScore(-5);
+                showToast("Ese personaje apoyaba al bando contrario.", false);
+            }
+        }
+
+        // --- Phase 3: Quiz of Fate ---
+        const quizData = [
+            { q: "La Ilíada narra los diez años completos de la Guerra de Troya.", opts: ["Verdadero", "Falso, solo narra 51 días del décimo año."], correct: 1 },
+            { q: "¿Qué significa la palabra griega 'Mênis', tema central de la Ilíada?", opts: ["Amor prohibido", "Inteligencia astuta (Metis)", "Cólera o ira funesta", "Regreso a casa (Nostos)"], correct: 2 },
+            { q: "¿Por qué se retira Aquiles del combate al principio del poema?", opts: ["Porque es herido en el talón", "Porque Agamenón le roba a su esclava Briseida", "Porque los dioses se lo ordenan", "Porque tiene miedo de Héctor"], correct: 1 },
+            { q: "¿Qué concepto griego comete Aquiles (desmesura o sacrilegio) al arrastrar el cadáver de Héctor?", opts: ["Kleos", "Areté", "Hybris", "Xenía"], correct: 2 },
+            { q: "Laocoonte fue devorado por serpientes porque...", opts: ["Desafió a Poseidón a una carrera de barcos", "Asesinó al rey Príamo", "Intentó advertir a los troyanos sobre la trampa del Caballo de Madera", "Robó la manzana de oro"], correct: 2 },
+            { q: "¿De quién fue la idea de construir el Caballo de Madera usando la inteligencia (Metis)?", opts: ["De Aquiles", "De Agamenón", "De Odiseo (Ulises)", "De Eneas"], correct: 2 }
+        ];
+
+        let currentQuiz = 0;
+
+        function initQuizGame() {
+            loadQuiz();
+        }
+
+        function loadQuiz() {
+            if(currentQuiz >= quizData.length) {
+                document.getElementById('quiz-container').innerHTML = `<h3 style="color:var(--success); text-align:center;">Prueba de Sabiduría Superada</h3>`;
+                document.getElementById('btn-next-4').classList.remove('hidden');
+                return;
+            }
+            
+            const q = quizData[currentQuiz];
+            document.getElementById('quiz-question').innerText = q.q;
+            const optsDiv = document.getElementById('quiz-options');
+            optsDiv.innerHTML = '';
+            
+            q.opts.forEach((opt, idx) => {
+                let btn = document.createElement('button');
+                btn.className = 'quiz-opt';
+                btn.innerText = opt;
+                btn.onclick = () => {
+                    document.querySelectorAll('.quiz-opt').forEach(b => b.onclick = null);
+                    if(idx === q.correct) {
+                        btn.classList.add('correct');
+                        updateScore(50); // 6 * 50 = 300 Kleos
+                        setTimeout(() => { currentQuiz++; loadQuiz(); }, 1000);
+                    } else {
+                        btn.classList.add('wrong');
+                        optsDiv.children[q.correct].classList.add('correct');
+                        updateScore(-15);
+                        setTimeout(() => { currentQuiz++; loadQuiz(); }, 1500);
+                    }
+                };
+                optsDiv.appendChild(btn);
+            });
+        }
+
+        // --- Phase 4: The Odyssey Matching ---
+        const trials = [
+            { id: 't1', title: "Polifemo (El Cíclope)", correct: 's1' },
+            { id: 't2', title: "Las Sirenas", correct: 's2' },
+            { id: 't3', title: "Los Pretendientes en Ítaca (Penélope)", correct: 's3' },
+            { id: 't4', title: "Escila y Caribdis", correct: 's4' }
+        ];
+
+        const solutions = [
+            { id: 's0', text: "-- Seleccionar Astucia --" },
+            { id: 's4', text: "Pasar cerca de una monstruo y sacrificar a 6 hombres para no perder el barco entero en el remolino." },
+            { id: 's2', text: "Tapar los oídos de la tripulación con cera y atarse a sí mismo al mástil." },
+            { id: 's1', text: "Emborracharlo, decirle que se llama 'Nadie', cegarlo y escapar bajo las ovejas." },
+            { id: 's3', text: "Tejer un sudario de día y destejiéndolo de noche para ganar tiempo." }
+        ];
+
+        function initOdysseyGame() {
+            const grid = document.getElementById('trial-grid');
+            trials.forEach(trial => {
+                let card = document.createElement('div');
+                card.className = 'trial-card';
+                card.innerHTML = `<h4>${trial.title}</h4>`;
+                
+                let select = document.createElement('select');
+                select.className = 'solution-select';
+                select.dataset.correct = trial.correct;
+                select.id = 'select-' + trial.id;
+                
+                solutions.forEach(sol => {
+                    let opt = document.createElement('option');
+                    opt.value = sol.id;
+                    opt.innerText = sol.text;
+                    select.appendChild(opt);
+                });
+                
+                card.appendChild(select);
+                grid.appendChild(card);
+            });
+            
+            document.getElementById('btn-next-5').classList.remove('hidden');
+        }
+
+        function checkOdysseyAndFinish() {
+            let allCorrect = true;
+            let selects = document.querySelectorAll('.solution-select');
+            
+            selects.forEach(sel => {
+                if(sel.value === 's0') {
+                    allCorrect = false;
+                } else if(sel.value === sel.dataset.correct) {
+                    sel.style.borderColor = 'var(--success)';
+                } else {
+                    allCorrect = false;
+                    sel.style.borderColor = 'var(--blood-red)';
+                }
+            });
+
+            if(allCorrect) {
+                updateScore(300); // 300 Kleos por superar la Odisea completa a la primera (o tras intentos penalizados)
+                nextScreen('screen-end');
+            } else {
+                updateScore(-20);
+                showToast("Alguna solución es errónea o está vacía. La Metis ha fallado.", false);
+            }
+        }
+
+        // --- Background Canvas Animation ---
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        class Spark {
+            constructor() {
+                this.reset();
+            }
+            reset() {
+                this.x = Math.random() * canvas.width;
+                this.y = canvas.height + Math.random() * 100;
+                this.size = Math.random() * 2 + 0.5;
+                this.speedY = Math.random() * 1.5 + 0.5;
+                this.speedX = Math.random() * 1 - 0.5;
+                this.opacity = Math.random();
+                this.color = Math.random() > 0.5 ? '212, 175, 55' : '138, 3, 3'; // Gold or Red (Cinders of Troy)
+            }
+            update() {
+                this.y -= this.speedY;
+                this.x += this.speedX;
+                this.opacity -= 0.005;
+                if (this.opacity <= 0 || this.y < 0) this.reset();
+            }
+            draw() {
+                ctx.fillStyle = `rgba(${this.color}, ${this.opacity})`;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        for (let i = 0; i < 150; i++) particles.push(new Spark());
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            requestAnimationFrame(animate);
+        }
+        animate();
+
+    </script>
+</body>
+</html>
